@@ -30,10 +30,10 @@ const HtmlHead = () => {
       />
       <meta property='og:url' content='https://smrkamran.github.io/' />
       <meta property='og:type' content='profile' />
-      <meta property='profile:first_name' content='Sameer' />
+      <meta property='profile:first_name' content='Usman' />
       <meta property='profile:last_name' content='Kamran' />
       <meta property='profile:gender' content='male' />
-      <meta property='profile:username' content='smrkamran' />
+      <meta property='profile:username' content='umnkamran' />
       <meta property='og:image:width' content='255' />
       <meta property='og:image:height' content='255' />
       <link
