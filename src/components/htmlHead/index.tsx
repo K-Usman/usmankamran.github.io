@@ -18,11 +18,11 @@ const HtmlHead = () => {
         integrity='sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN'
         crossOrigin='anonymous'
       ></script>
-      <meta property='og:site_name' content="Sameers's Resume" />
-      <meta property='og:title' content='About Sameer Kamran' />
+      <meta property='og:site_name' content="Usman's Resume" />
+      <meta property='og:title' content='About Usman Kamran' />
       <meta
         property='og:description'
-        content='This web page is a Resume and contains all the experiences, education and achievements of Sameer Kamran.'
+        content='This web page is a Resume and contains all the experiences, education and achievements of Usman Kamran.'
       />
       <meta
         property='og:image'
