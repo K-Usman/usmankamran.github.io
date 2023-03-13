@@ -1,5 +1,5 @@
 export default {
-    background: " Software Engineer with more than 3 years of experience in industry. Worked as a lone-wolf as well as in Agile Teams. Expertise is design and development of Frontend Applications as well as WebApis from scratch. Also designed databases and have been part of requirement gathering teams. Always open to learn new tools and technologies.",
-    objective: "To be a part of an organization where my expertise are utilized to the fullest, where i can learn new skills and add more value to my work.",
+    background: "Aspiring Data Engineer with 2 years experience of testing and maintaining quality of data products. Developed critical thinking and eye to detail while working in agile teams.",
+    objective: "Want to be a part of an organization where I can learn new skills related to latest technology and where I can provide value using my skills and hardwork",
     heading: "Personal Statement"
 }

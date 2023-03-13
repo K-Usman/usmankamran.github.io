@@ -1,3 +1,3 @@
 export default {
-    title: "Sameer's Resumé"
+    title: "Usman's Resumé"
 }

@@ -52,7 +52,7 @@ const Intro = (props: IntroContent & DisplayPicture) => {
 
           <br />
           <div className='text-center'>
-            <a
+            {/* <a
               className='facebook-link'
               href={props.text.social.facebook}
               target='_blank'
@@ -72,7 +72,7 @@ const Intro = (props: IntroContent & DisplayPicture) => {
               >
                 <PopoverBody>My Facebook Profile</PopoverBody>
               </Popover>
-            </a>
+            </a> */}
             <a
               className='github-link'
               href={props.text.social.github}

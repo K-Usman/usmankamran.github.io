@@ -54,7 +54,7 @@ export default function IndexRoute(props: PageProps) {
         <Education text={EducationContent} />
         {/* <Projects text={ProjectsContent} /> */}
         {/* <MostProudOf text={ProudContent} /> */}
-        <Recommendations text={RecommendationContent} />
+        {/* <Recommendations text={RecommendationContent} /> */}
         {/* <Testimonials text={TestimonialContent} /> */}
         <Contact text={ContactContent} />
       </div>

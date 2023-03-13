@@ -11,6 +11,7 @@ interface IPersonalStatement {
 }
 
 const PersonalStatement = (props: IPersonalStatement) => {
+  console.log(props)
   return (
     <>
       <Heading text={props.text.heading} />

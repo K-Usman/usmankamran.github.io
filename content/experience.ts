@@ -1,76 +1,29 @@
 export default [
   {
-    title: 'Software Engineer',
-    company: 'Schwarm Technologies GmbH',
-    url: 'https://schwarm.com/',
-    location: 'Munich, Germany',
-    from: 'June 2021',
+    title: 'Senior QA and Testing Engineer',
+    company: 'Astera Software',
+    url: 'https://www.astera.com/',
+    location: 'Karachi, Germany',
+    from: 'July 2021',
     to: 'Present',
     bullets: [
-      'Working on highly scalable IOT Web Platform',
-      'My responsibilites also includes developing the custom applications for different Energy Companies in Germany like E.On and Nordex.',
-      'Tools I am using are Angular, Aurelia, Java Spring'
+      'Leading the QA team of Data Extraction product',
+      'Research and tested AI/ML based data extraction features',
+      'Working as a technical support engineer while providing ETL and Data Extraction support',
+      'Conducted multiple product trainings'
     ],
   },
   {
-    title: 'Full Stack Developer',
-    company: 'Boltech Solutions',
-    url: 'http://boltechsolutions.com/',
+    title: 'Data Science Intern',
+    company: 'ECS',
+    url: 'https://www.linkedin.com/company/shopecs/',
     location: 'Lahore, Pakistan',
-    from: 'June 2019',
-    to: 'June 2021',
+    from: 'December 2020',
+    to: 'Februrary 2021',
     bullets: [
-      'Worked on Tax Management System for Government of Malawi, Africa (.Net MVC5, SQL Server, SignalR, AutoMapper, Autofac, Angular 6, Angular Material, PrimeNg)',
-      'Worked on GYM Management System for UFC Gym International (.Net Core 3.0, MySQL, SignalR, AutoMapper, Autofac, Angular 8, Angular Material, ZKTeco Access Gates Integration)',
-      'Worked on Employee Service Catalogue & Digital Approvals System for Exceed IT Services (ExpressJS, Mongoose, MongoDB, Angular 7)'
+      'Worked KIPs while working in the business intelligence team',
+      'Queried and Analysed SQL data during my stay',
+      'Statitical Analyses using R and Excel'
     ],
-  },
-  {
-    title: 'Web Developer (Part Time)',
-    company: 'HighBit Technologies',
-    url: 'https://www.highbitsol.com/',
-    location: 'Lahore, Pakistan',
-    from: 'February 2019',
-    to: 'June 2019',
-    bullets: [
-      'Revamped a Mobile Repair Shop POS System (NodeJS, Sequelize, GraphQL, Angular 7, Angular Material)'
-    ],
-  },
-  {
-    title: '.Net Developer',
-    company: 'Codility Solutions',
-    url: 'https://codility.co/',
-    location: 'Lahore, Pakistan',
-    from: 'March 2018',
-    to: 'June 2019',
-    bullets: [
-      'Worked on Purchase Order Management Web Application (.Net Core 2.1 WebApi, SQL Server, .Net MVC5, KnockoutJS, VanillaJS, SQL Server)',
-      'Worked on Inventory/Point-of-Sale Desktop Application (WPF, SQLite, MvvmCross, DevExpress)',
-      'Worked on Office Management System. Attendance/Task Management (.Net MVC5, SQL Server, SignalR, ZKTeco Biometric Integration)'
-    ],
-  },
-  {
-    title: 'Freelance Web Developer',
-    company: ['Upwork'],
-    url: ['https://upwork.com/'],
-    location: 'Lahore, Pakistan',
-    from: 'August 2017',
-    to: 'February 2018',
-    bullets: [
-      'Worked on a Digital Magazine Website (.Net MVC5, SQL Server, Bootstrap, JQuery)',
-      'Resolved RabbitMQ exchange issue in HR Portal',
-      'Built Custom Chat for NopCommerce Website'
-    ],
-  },
-  {
-    title: '.Net Developer (Internship)',
-    company: ['Inseparable Technology'],
-    url: ['http://insep.tech/'],
-    location: 'Lahore, Pakistan',
-    from: 'April 2017',
-    to: 'July 2017',
-    bullets: [
-      'Worked on an Ecommerce Store (.Net MVC5, SQL Server, SignalR, OAuth, Social Media Integration)'
-    ],
-  }
+  }, 
 ];

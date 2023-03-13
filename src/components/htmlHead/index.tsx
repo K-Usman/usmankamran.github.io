@@ -11,7 +11,7 @@ const HtmlHead = () => {
         content='width=device-width, initial-scale=1, shrink-to-fit=no'
       />
       <meta name='note' content='environment=development' />
-      <title>About Sameer Kamran</title>
+      <title>About Usman Kamran</title>
       <script src='https://use.fontawesome.com/d41a1a9d72.js'></script>
       <script
         src='https://code.jquery.com/jquery-3.2.1.slim.min.js'
