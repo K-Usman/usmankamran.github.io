@@ -21,7 +21,7 @@ export default {
       issueDate: 'September, 2020',
       credentialTitle: 'See Credentials',
       credentialLink:
-        '/downloads/CertificateOfCompletion_Become a Data Analyst',
+        '/downloads/CertificateOfCompletion_Become a Data Analyst.pdf',
     }
   ],
 };

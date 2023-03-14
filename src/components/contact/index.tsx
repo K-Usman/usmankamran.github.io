@@ -27,7 +27,7 @@ const Contact = (props: IProps) => {
       setSendingState(1);
       axios({
         method: 'post',
-        url: 'https://formspree.io/f/mjvjrbjg',
+        url: 'https://formspree.io/f/xzbqvkzw',
         data: {
           email,
           message: `${name} sent this message, "${message}".`,

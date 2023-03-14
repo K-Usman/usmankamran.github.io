@@ -28,7 +28,7 @@ const HtmlHead = () => {
         property='og:image'
         content='https://avatars.githubusercontent.com/u/24979298?v=4'
       />
-      <meta property='og:url' content='https://smrkamran.github.io/' />
+      <meta property='og:url' content='https://k-usman.github.io//' />
       <meta property='og:type' content='profile' />
       <meta property='profile:first_name' content='Usman' />
       <meta property='profile:last_name' content='Kamran' />

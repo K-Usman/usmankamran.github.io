@@ -21,9 +21,9 @@ export default [
     from: 'December 2020',
     to: 'Februrary 2021',
     bullets: [
-      'Worked KIPs while working in the business intelligence team',
-      'Queried and Analysed SQL data during my stay',
-      'Statitical Analyses using R and Excel'
+      'Worked on different KPIs while working in the business intelligence team',
+      'Queried and Analyzed SQL data during my stay',
+      'Statistical Analyses using R and Excel'
     ],
   }, 
 ];
