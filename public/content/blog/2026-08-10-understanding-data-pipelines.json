@@ -1,0 +1,6 @@
+{
+  "title": "Understanding Modern Data Pipelines",
+  "date": "2026-08-10T19:00:00.000Z",
+  "description": "An introduction to the architecture of robust and scalable data pipelines.",
+  "body": "In data engineering, a data pipeline is the foundation of any analytical workspace. It moves data from sources (like databases, APIs, and logs) to destinations (like data warehouses and data lakes) while transforming it into a clean, queryable format.\n\n### Key Stages\n1. **Ingestion**: Extracting raw data from sources.\n2. **Transformation**: Cleaning, structuring, and aggregating data (often using dbt or Apache Spark).\n3. **Loading**: Loading the transformed data into a data warehouse (like Snowflake, BigQuery, or Redshift).\n4. **Orchestration**: Managing scheduling and dependencies (using tools like Apache Airflow or Prefect).\n\nBuilding reliable pipelines requires careful error handling, data quality checks, and monitoring."
+}

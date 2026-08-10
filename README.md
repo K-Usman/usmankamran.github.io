@@ -1,39 +1,50 @@
-# Welcome to My Resume!
+# React + TypeScript + Vite
 
-I created this resume using **GatsbyJs** for learning purposes but now as I have open-sourced it completely, I'm excited to share the code structure and implementation details. Feel free to fork this and change it the way you want.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Folder Structure
-    .
-    ├── node_modules
-    ├── src
-    │   ├──── components
-    │   └──── pages
-    ├── content
-    ├── static
-    │   └──── downloads
-    ├── .gitignore
-    ├── .prettierrc
-    ├── gatsby-browser.js
-    ├── gatsby-config.js
-    ├── gatsby-node.js
-    ├── gatsby-ssr.js
-    ├── LICENSE
-    ├── package-lock.json
-    ├── package.json
-    └── README.md
+Currently, two official plugins are available:
 
-## Updating Content
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-I have followed the idea of **Single change, update eveywhere**. You can modify all the content in the `/content/` folder. To add a new content section, simply add a new typescript file and import it in the `/src/pages/index.tsx`.
+## Expanding the ESLint configuration
 
-## Updating Downloads
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-To change downloadable files, add files in the `static/downloads/` folder.
+- Configure the top-level `parserOptions` property like this:
 
-## Deployment
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
+```
 
-To deploy your resume, use `gatsby build` command to make a build. Make sure to rename your `/public` folder to `/docs` if you want to upload on Github Pages. You can also setup a command following this [link](https://www.gatsbyjs.com/docs/how-gatsby-works-with-github-pages/).
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-## Design Changes
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-To change design of the resume, use `gatsby develop` and change/add a component in `src/components/` folder.
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```
