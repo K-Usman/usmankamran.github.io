@@ -1,12 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-const POSTS_METADATA = [
-  { slug: 'welcome-to-my-new-portfolio' },
-  { slug: 'understanding-data-pipelines' },
-  { slug: 'dbt-best-practices' }
-];
-
 const docsDir = path.resolve('docs');
 const indexHtmlPath = path.join(docsDir, 'index.html');
 
@@ -23,12 +17,23 @@ fs.mkdirSync(blogDir, { recursive: true });
 fs.writeFileSync(path.join(blogDir, 'index.html'), indexContent);
 console.log('Generated: docs/blog/index.html');
 
-// 2. Generate fallback index.html for each individual post slug
-POSTS_METADATA.forEach((post) => {
-  const postDir = path.join(docsDir, 'blog', post.slug);
-  fs.mkdirSync(postDir, { recursive: true });
-  fs.writeFileSync(path.join(postDir, 'index.html'), indexContent);
-  console.log(`Generated: docs/blog/${post.slug}/index.html`);
-});
+// 2. Dynamically scan public/content/blog/ to find all post slugs
+const blogSourceDir = path.resolve('public', 'content', 'blog');
+if (fs.existsSync(blogSourceDir)) {
+  const files = fs.readdirSync(blogSourceDir);
+  const slugs = files
+    .filter(file => file.endsWith('.md'))
+    .map(file => file.replace(/\.md$/, ''));
+
+  // 3. Generate fallback index.html for each individual post slug
+  slugs.forEach((slug) => {
+    const postDir = path.join(docsDir, 'blog', slug);
+    fs.mkdirSync(postDir, { recursive: true });
+    fs.writeFileSync(path.join(postDir, 'index.html'), indexContent);
+    console.log(`Generated: docs/blog/${slug}/index.html`);
+  });
+} else {
+  console.warn('Warning: public/content/blog directory not found. No slugs generated.');
+}
 
 console.log('Post-build static routing setup completed successfully.');

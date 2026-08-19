@@ -90,14 +90,20 @@ a {
 /* Grid & Layout */
 .container-site {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 4rem;
+}
+
+@media (max-width: 1024px) {
+  .container-site {
+    padding: 0 2.5rem;
+  }
 }
 
 @media (max-width: 768px) {
   .container-site {
-    padding: 0 1.25rem;
+    padding: 0 1.5rem;
   }
 }
 

@@ -21,31 +21,32 @@ interface ParsedPost {
   date: string;
   description: string;
   body: string;
+  author?: string;
 }
 
 const POSTS_METADATA: PostMetadata[] = [
   {
     slug: 'welcome-to-my-new-portfolio',
     title: 'Welcome to my new Portfolio!',
-    date: '2026-08-19',
+    date: '2026-08-15',
     description: 'An introduction to my updated personal website, built with React, Vite, and simple Markdown.'
   },
   {
     slug: 'understanding-data-pipelines',
     title: 'Understanding Modern Data Pipelines',
-    date: '2026-08-10',
+    date: '2026-08-18',
     description: 'An introduction to the architecture of robust and scalable data pipelines.'
   },
   {
     slug: 'dbt-best-practices',
     title: 'Best Practices for dbt (Data Build Tool)',
-    date: '2026-07-22',
+    date: '2026-08-17',
     description: 'How to structure your dbt projects for cleaner, more maintainable data models.'
   },
     {
     slug: 'scalable-data-lakes',
     title: 'How to Scale Data Lakes',
-    date: '2026-08-20',
+    date: '2026-08-16',
     description: 'A practical guide to organizing cloud object stores for large-scale query engines.'
   }
 ];
@@ -72,9 +73,17 @@ function App() {
     setCurrentPath(path);
   };
 
+  // Sort all posts in reverse chronological order (newest first)
+  const sortedPosts = [...POSTS_METADATA].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // For the homepage, we only show the 3 most recent posts
+  const recentPosts = sortedPosts.slice(0, 3);
+
   // Determine selected post slug from URL path (e.g. /blog/welcome-to-my-new-portfolio)
   let selectedPostSlug: string | null = null;
-  if (currentPath.startsWith('/blog/')) {
+  if (currentPath.startsWith('/blog/') && currentPath !== '/blog' && currentPath !== '/blog/') {
     selectedPostSlug = currentPath.substring(6).replace(/\/$/, ''); // strip trailing slash if any
   }
 
@@ -119,7 +128,8 @@ function App() {
             title: metadata.title || 'Untitled',
             date: metadata.date || '',
             description: metadata.description || '',
-            body
+            body,
+            author: metadata.author || 'Usman Kamran'
           });
         } else {
           // Fallback if no frontmatter
@@ -128,7 +138,8 @@ function App() {
             title: matchedMeta?.title || 'Untitled',
             date: matchedMeta?.date || '',
             description: matchedMeta?.description || '',
-            body: normalizedText
+            body: normalizedText,
+            author: 'Usman Kamran'
           });
         }
       } catch (err: any) {
@@ -169,6 +180,18 @@ function App() {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
+    // Images (e.g. ![alt](url)) - Self-heals Windows backslashes automatically
+    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (_match, alt, url) => {
+      const normalizedUrl = url.replace(/\\/g, '/');
+      return `<img src="${normalizedUrl}" alt="${alt}" style="max-width: 100%; height: auto; display: block; margin: 1.5rem 0; border: 1px solid var(--border-line); background: var(--bg-surface); padding: 0.5rem;" />`;
+    });
+
+    // Inline Links (e.g. [text](url))
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, (_match, text, url) => {
+      const normalizedUrl = url.replace(/\\/g, '/');
+      return `<a href="${normalizedUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    });
+
     // Headings
     html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
@@ -205,7 +228,7 @@ function App() {
     html = processedLines.join('\n');
 
     // Paragraphs
-    const blockTags = ['<h3>', '<h2>', '<h1>', '<ul>', '</ul>', '<li>'];
+    const blockTags = ['<h3>', '<h2>', '<h1>', '<ul>', '</ul>', '<li>', '<img', '<a'];
     html = html
       .split('\n')
       .map(line => {
@@ -233,11 +256,17 @@ function App() {
     }
   };
 
+  const getReadingTime = (text: string) => {
+    const wordsPerMinute = 200;
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.ceil(words / wordsPerMinute));
+  };
+
   return (
     <div className="app-wrapper">
       <header className="header">
         <div className="container-site header-content">
-          <div className="logo-container">
+          <div className="logo-container" style={{ cursor: 'pointer' }} onClick={() => navigateTo('/')}>
             <span className="logo-badge">UK</span>
             <span className="logo-text">Usman <span className="logo-text-muted">Kamran</span></span>
           </div>
@@ -246,7 +275,7 @@ function App() {
             <span className="nav-item text-mono" onClick={() => handleNavClick('about')}>
               <User size={12} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> About Me
             </span>
-            <span className="nav-item text-mono" onClick={() => handleNavClick('blog')}>
+            <span className="nav-item text-mono" onClick={() => navigateTo('/blog')}>
               <BookOpen size={12} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Blog
             </span>
           </nav>
@@ -261,40 +290,91 @@ function App() {
 
       <main className="main-content">
         {selectedPostSlug ? (
-          /* Blog Reader View */
+          /* Blog Reader View with Split Columns */
           <div className="container-site">
             <div className="article-reader">
-              <button className="btn-back text-mono" onClick={() => navigateTo('/')}>
-                <ArrowLeft size={12} /> Back to home
-              </button>
-
-              {loadingPost ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
-                  <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent-color)' }} />
-                </div>
-              ) : fetchError ? (
-                <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                  <p style={{ color: '#bc4749', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.2rem', marginBottom: '1rem' }}>{fetchError}</p>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--text-ink-muted)', maxWidth: '500px', margin: '0 auto' }}>
-                    There was an issue fetching the article content from the server. Please check your network connection, ensure the file exists on the server, or try reloading the page.
-                  </p>
-                </div>
-              ) : postContent ? (
-                <article>
-                  <div className="article-header">
-                    <div className="article-meta text-mono">{formatDate(postContent.date)}</div>
-                    <h1 className="article-title">{postContent.title}</h1>
+              <div className="article-grid">
+                
+                {/* Left Column: Back button & Metadata */}
+                <div className="article-left-col">
+                  <button className="btn-back text-mono" onClick={() => navigateTo('/blog')}>
+                    <ArrowLeft size={12} /> Back to blog
+                  </button>
+                  
+                  <div className="article-metadata-list">
+                    <div>
+                      <div className="metadata-item-label text-mono">Published</div>
+                      <div className="metadata-item-value">
+                        {postContent ? formatDate(postContent.date) : formatDate(sortedPosts.find(p => p.slug === selectedPostSlug)?.date || '')}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="metadata-item-label text-mono">Author</div>
+                      <div className="metadata-item-value">
+                        {postContent?.author || 'Usman Kamran'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="metadata-item-label text-mono">Reading Time</div>
+                      <div className="metadata-item-value">
+                        {postContent ? `${getReadingTime(postContent.body)} min read` : '... min read'}
+                      </div>
+                    </div>
                   </div>
-                  <div 
-                    className="article-body" 
-                    dangerouslySetInnerHTML={renderMarkdown(postContent.body)} 
-                  />
+                </div>
+
+                {/* Right Column: Title and Content */}
+                <div className="article-right-col">
+                  {loadingPost ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                      <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent-color)' }} />
+                    </div>
+                  ) : fetchError ? (
+                    <div style={{ padding: '2rem 0' }}>
+                      <p style={{ color: '#bc4749', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.2rem', marginBottom: '1rem' }}>{fetchError}</p>
+                      <p style={{ fontSize: '0.95rem', color: 'var(--text-ink-muted)' }}>
+                        There was an issue fetching the article content from the server. Please check your network connection, ensure the file exists on the server, or try reloading the page.
+                      </p>
+                    </div>
+                  ) : postContent ? (
+                    <article>
+                      <h1 className="article-title" style={{ marginBottom: '2.5rem' }}>{postContent.title}</h1>
+                      <div 
+                        className="article-body" 
+                        dangerouslySetInnerHTML={renderMarkdown(postContent.body)} 
+                      />
+                    </article>
+                  ) : null}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        ) : currentPath === '/blog' || currentPath === '/blog/' ? (
+          /* All Blog Posts Page */
+          <div className="container-site" style={{ padding: '5.5rem 0' }}>
+            <button className="btn-back text-mono" onClick={() => navigateTo('/')} style={{ marginBottom: '2rem' }}>
+              <ArrowLeft size={12} /> Back to home
+            </button>
+            <p className="section-meta-heading text-mono">Journal</p>
+            <h1 className="section-main-title" style={{ fontSize: '3rem', marginBottom: '3.5rem' }}>All Notes & Learnings</h1>
+            <div className="blog-cards-grid">
+              {sortedPosts.map((post) => (
+                <article key={post.slug} className="blog-item-card">
+                  <div className="card-top-meta text-mono">{formatDate(post.date)}</div>
+                  <h3 className="card-title">{post.title}</h3>
+                  <p className="card-excerpt">{post.description}</p>
+                  <div className="card-bottom-row">
+                    <button className="read-article-btn text-mono" onClick={() => navigateTo(`/blog/${post.slug}`)}>
+                      Read The Article <ArrowRight size={12} />
+                    </button>
+                  </div>
                 </article>
-              ) : null}
+              ))}
             </div>
           </div>
         ) : (
-          /* Standard Sections Layout */
+          /* Standard Sections Layout - Home Page */
           <>
             {/* 1. Welcome / About Section */}
             <section id="about" className="page-section">
@@ -348,14 +428,21 @@ function App() {
               </div>
             </section>
 
-            {/* 2. Recent Notes and Learnings Section */}
+            {/* 2. Recent Notes and Learnings Section (Only 3 most recent) */}
             <section id="blog" className="page-section">
               <div className="container-site">
-                <p className="section-meta-heading text-mono">Notes from the Pipeline</p>
-                <h2 className="section-main-title">Recent Notes & Learnings</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
+                  <div>
+                    <p className="section-meta-heading text-mono">Notes from the Pipeline</p>
+                    <h2 className="section-main-title" style={{ marginBottom: 0 }}>Recent Notes & Learnings</h2>
+                  </div>
+                  <span className="cta-button text-mono" style={{ fontSize: '10px' }} onClick={() => navigateTo('/blog')}>
+                    All Articles →
+                  </span>
+                </div>
 
                 <div className="blog-cards-grid">
-                  {POSTS_METADATA.map((post) => (
+                  {recentPosts.map((post) => (
                     <article key={post.slug} className="blog-item-card">
                       <div className="card-top-meta text-mono">{formatDate(post.date)}</div>
                       <h3 className="card-title">{post.title}</h3>
@@ -427,7 +514,7 @@ function App() {
       <footer id="contact" className="footer">
         <div className="container-site footer-grid">
           <div>
-            <div className="logo-container" style={{ marginBottom: '1rem' }}>
+            <div className="logo-container" style={{ marginBottom: '1rem', cursor: 'pointer' }} onClick={() => navigateTo('/')}>
               <span className="logo-badge">UK</span>
               <span className="logo-text">Usman <span className="logo-text-muted">Kamran</span></span>
             </div>

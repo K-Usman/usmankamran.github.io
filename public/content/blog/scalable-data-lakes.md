@@ -6,6 +6,6 @@ description: A practical guide to organizing cloud object stores for large-scale
 
 Here is a diagram representing the data architecture:
 
-![Data Lake Architecture](/images/data_lake1.jpg)
+![Data Lake Architecture](\images\data_lake1.jpg)
 
 This post covers storage partitioning and formats...
