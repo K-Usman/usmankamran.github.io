@@ -297,8 +297,8 @@ function App() {
                 
                 {/* Left Column: Back button & Metadata */}
                 <div className="article-left-col">
-                  <button className="btn-back text-mono" onClick={() => navigateTo('/blog')}>
-                    <ArrowLeft size={12} /> Back to blog
+                  <button className="btn-back text-mono" onClick={() => navigateTo('/')}>
+                    <ArrowLeft size={12} /> Back to home
                   </button>
                   
                   <div className="article-metadata-list">
