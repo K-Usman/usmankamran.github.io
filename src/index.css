@@ -1,34 +1,32 @@
 :root {
-  /* Color Palette */
-  --bg-color: #080c14;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #111a2e 0%, #080c14 100%);
-  --card-bg: rgba(22, 30, 49, 0.45);
-  --card-bg-hover: rgba(30, 41, 67, 0.6);
-  --card-border: rgba(255, 255, 255, 0.06);
-  --card-border-hover: rgba(139, 92, 246, 0.25);
+  /* Color Palette - GipfelLabs Editorial Aesthetic */
+  --bg-color: #faf9f6; /* Warm Paper White */
+  --bg-surface: #ffffff; /* Clean White for cards */
+  --bg-surface-hover: #f5f4f0; /* Muted warm grey on hover */
+  --border-line: #e3e0d8; /* Soft warm border */
+  --border-line-strong: #8c8980; /* Stronger border for buttons */
   
-  --primary-color: #8b5cf6; /* Electric Violet */
-  --primary-glow: rgba(139, 92, 246, 0.15);
-  --secondary-color: #06b6d4; /* Neon Cyan */
-  --secondary-glow: rgba(6, 182, 212, 0.15);
+  --accent-color: #0f3e2b; /* Deep Forest Green */
+  --accent-color-hover: #1b5e3a; /* Lighter Forest Green */
+  --accent-color-light: rgba(15, 62, 43, 0.08); /* Transparent accent */
   
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-ink: #1c1a17; /* Deep Charcoal */
+  --text-ink-muted: #5c5954; /* Muted Charcoal */
+  --text-ink-faint: #8e8b82; /* Muted metadata text */
   
-  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* Typography Scale */
+  --transition-fast: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
   font-family: var(--font-body);
   line-height: 1.6;
   font-weight: 400;
-  color: var(--text-primary);
+  color: var(--text-ink);
   background-color: var(--bg-color);
-  background-image: var(--bg-gradient);
-  background-attachment: fixed;
-
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,59 +40,72 @@
 body {
   min-height: 100vh;
   overflow-x: hidden;
-  color: var(--text-primary);
+  color: var(--text-ink);
+  background-color: var(--bg-color);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-color);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 5px;
+  background: var(--border-line-strong);
   border: 2px solid var(--bg-color);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--accent-color);
 }
 
 /* Selection */
 ::selection {
-  background: var(--primary-glow);
-  color: #fff;
+  background: var(--accent-color-light);
+  color: var(--accent-color);
 }
 
-/* Base Headings */
+/* Base Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-ink);
   letter-spacing: -0.02em;
-  color: #ffffff;
-  line-height: 1.25;
 }
 
 a {
-  color: var(--primary-color);
+  color: inherit;
   text-decoration: none;
-  transition: var(--transition-smooth);
+  transition: var(--transition-fast);
 }
 
-a:hover {
-  color: var(--secondary-color);
+/* Monospace Utilities */
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
 }
 
-/* Custom Utilities */
-.container {
-  max-width: 1000px;
+/* Grid & Layout */
+.container-site {
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 0 1.5rem;
+  .container-site {
+    padding: 0 1.25rem;
   }
+}
+
+/* Utility classes matching reference */
+.border-b-line {
+  border-bottom: 1px solid var(--border-line);
+}
+
+.border-line {
+  border: 1px solid var(--border-line);
 }

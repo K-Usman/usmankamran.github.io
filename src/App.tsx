@@ -1,103 +1,159 @@
 import { useState, useEffect } from 'react';
 import { 
+  User,
+  BookOpen,
   Mail, 
   ArrowLeft, 
   ArrowRight, 
-  BookOpen, 
   Loader2 
 } from 'lucide-react';
 import './App.css';
 
-interface Post {
+interface PostMetadata {
   slug: string;
+  title: string;
+  date: string;
+  description: string;
+}
+
+interface ParsedPost {
   title: string;
   date: string;
   description: string;
   body: string;
 }
 
-// Vite compile-time import of local posts
-const localPostModules = import.meta.glob('/public/content/blog/*.json', { eager: true });
-
-const staticPosts: Post[] = Object.keys(localPostModules).map((path) => {
-  const slug = path.split('/').pop()?.replace('.json', '') || '';
-  const data = (localPostModules[path] as any).default || localPostModules[path];
-  return {
-    slug,
-    title: data.title || 'Untitled',
-    date: data.date || new Date().toISOString(),
-    description: data.description || '',
-    body: data.body || '',
-  };
-});
+const POSTS_METADATA: PostMetadata[] = [
+  {
+    slug: 'welcome-to-my-new-portfolio',
+    title: 'Welcome to my new Portfolio!',
+    date: '2026-08-19',
+    description: 'An introduction to my updated personal website, built with React, Vite, and simple Markdown.'
+  },
+  {
+    slug: 'understanding-data-pipelines',
+    title: 'Understanding Modern Data Pipelines',
+    date: '2026-08-10',
+    description: 'An introduction to the architecture of robust and scalable data pipelines.'
+  },
+  {
+    slug: 'dbt-best-practices',
+    title: 'Best Practices for dbt (Data Build Tool)',
+    date: '2026-07-22',
+    description: 'How to structure your dbt projects for cleaner, more maintainable data models.'
+  }
+];
 
 function App() {
-  const [posts, setPosts] = useState<Post[]>(staticPosts);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [postContent, setPostContent] = useState<ParsedPost | null>(null);
+  const [loadingPost, setLoadingPost] = useState(false);
 
+  // Sync state with popstate event (browser back/forward button clicks)
   useEffect(() => {
-    // Scroll to top when post changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [selectedPost]);
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
 
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  // Determine selected post slug from URL path (e.g. /blog/welcome-to-my-new-portfolio)
+  let selectedPostSlug: string | null = null;
+  if (currentPath.startsWith('/blog/')) {
+    selectedPostSlug = currentPath.substring(6).replace(/\/$/, ''); // strip trailing slash if any
+  }
+
+  // Fetch and parse markdown post content when a slug is selected
   useEffect(() => {
-    // Dynamically fetch the latest blog posts from GitHub API in production.
-    // This allows Decap CMS changes to show up immediately without rebuilding the site!
-    const fetchLatestPosts = async () => {
-      if (import.meta.env.DEV) {
-        // In local development, we already have the local filesystem posts eager loaded
-        return;
-      }
+    if (!selectedPostSlug) {
+      setPostContent(null);
+      return;
+    }
 
+    const fetchPost = async () => {
+      setLoadingPost(true);
       try {
-        setLoading(true);
-        const response = await fetch(
-          'https://api.github.com/repos/K-Usman/usmankamran.github.io/contents/public/content/blog'
-        );
-        
+        const response = await fetch(`/content/blog/${selectedPostSlug}.md`);
         if (!response.ok) {
-          throw new Error('Failed to fetch blog list from GitHub Contents API');
+          throw new Error('Failed to fetch markdown file');
         }
-
-        const files = await response.json();
-        if (!Array.isArray(files)) return;
-
-        const jsonFiles = files.filter(file => file.name.endsWith('.json'));
+        const text = await response.text();
         
-        const fetchedPosts = await Promise.all(
-          jsonFiles.map(async (file) => {
-            const postResponse = await fetch(file.download_url);
-            if (!postResponse.ok) {
-              throw new Error(`Failed to fetch post details for ${file.name}`);
+        // Standardize line endings to handle Windows/Linux carriage returns
+        const normalizedText = text.replace(/\r\n/g, '\n');
+        
+        // Parse Frontmatter
+        const parts = normalizedText.split('---');
+        if (parts.length >= 3) {
+          const frontmatter = parts[1];
+          const body = parts.slice(2).join('---').trim();
+          
+          const metadata: Record<string, string> = {};
+          frontmatter.split('\n').forEach(line => {
+            const index = line.indexOf(':');
+            if (index > -1) {
+              const key = line.substring(0, index).trim();
+              const value = line.substring(index + 1).trim().replace(/^['"]|['"]$/g, '');
+              metadata[key] = value;
             }
-            const data = await postResponse.json();
-            const slug = file.name.replace('.json', '');
-            return {
-              slug,
-              title: data.title || 'Untitled',
-              date: data.date || new Date().toISOString(),
-              description: data.description || '',
-              body: data.body || '',
-            };
-          })
-        );
+          });
 
-        // Sort posts newest first
-        fetchedPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setPosts(fetchedPosts);
+          setPostContent({
+            title: metadata.title || 'Untitled',
+            date: metadata.date || '',
+            description: metadata.description || '',
+            body
+          });
+        } else {
+          // Fallback if no frontmatter
+          const matchedMeta = POSTS_METADATA.find(p => p.slug === selectedPostSlug);
+          setPostContent({
+            title: matchedMeta?.title || 'Untitled',
+            date: matchedMeta?.date || '',
+            description: matchedMeta?.description || '',
+            body: normalizedText
+          });
+        }
       } catch (err) {
-        console.warn('GitHub API failed, falling back to pre-bundled posts:', err);
+        console.error('Error fetching markdown post:', err);
       } finally {
-        setLoading(false);
+        setLoadingPost(false);
       }
     };
 
-    fetchLatestPosts();
-  }, []);
+    fetchPost();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedPostSlug]);
+
+  const handleNavClick = (sectionId: string) => {
+    if (window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+      setCurrentPath('/');
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   // Simple Markdown Renderer
   const renderMarkdown = (md: string) => {
+    // Escaping basic HTML to prevent XSS
     let html = md
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -105,7 +161,7 @@ function App() {
 
     // Headings
     html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^##\s+(.+)$/gm, '<h2>$2</h2>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
     html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
 
     // Bold
@@ -157,11 +213,11 @@ function App() {
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      const day = date.getDate();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day}. ${month}. ${year}`;
     } catch {
       return dateStr;
     }
@@ -169,143 +225,213 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      <div className="glow-spot-1"></div>
-      <div className="glow-spot-2"></div>
-
       <header className="header">
-        <div className="container header-content">
-          <div className="logo-text">Usman Kamran</div>
-          <a href="/admin/index.html" className="admin-link">
-            CMS Portal
-          </a>
+        <div className="container-site header-content">
+          <div className="logo-container">
+            <span className="logo-badge">UK</span>
+            <span className="logo-text">Usman <span className="logo-text-muted">Kamran</span></span>
+          </div>
+
+          <nav className="nav-links">
+            <span className="nav-item text-mono" onClick={() => handleNavClick('about')}>
+              <User size={12} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> About Me
+            </span>
+            <span className="nav-item text-mono" onClick={() => handleNavClick('blog')}>
+              <BookOpen size={12} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Blog
+            </span>
+          </nav>
+
+          <div>
+            <span className="cta-button text-mono" onClick={() => handleNavClick('contact')}>
+              Contact Me
+            </span>
+          </div>
         </div>
       </header>
 
       <main className="main-content">
-        <div className="container">
-          {selectedPost ? (
-            /* Post Reader Mode */
-            <div className="reader-container">
-              <button className="back-btn" onClick={() => setSelectedPost(null)}>
-                <ArrowLeft size={16} /> Back to home
+        {selectedPostSlug ? (
+          /* Blog Reader View */
+          <div className="container-site">
+            <div className="article-reader">
+              <button className="btn-back text-mono" onClick={() => navigateTo('/')}>
+                <ArrowLeft size={12} /> Back to home
               </button>
-              <article>
-                <div className="reader-header">
-                  <h1 className="reader-title">{selectedPost.title}</h1>
-                  <div className="reader-meta">
-                    <span className="reader-date">
-                      Published {formatDate(selectedPost.date)}
-                    </span>
-                  </div>
+
+              {loadingPost || !postContent ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+                  <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent-color)' }} />
                 </div>
-                <div 
-                  className="reader-body" 
-                  dangerouslySetInnerHTML={renderMarkdown(selectedPost.body)} 
-                />
-              </article>
+              ) : (
+                <article>
+                  <div className="article-header">
+                    <div className="article-meta text-mono">{formatDate(postContent.date)}</div>
+                    <h1 className="article-title">{postContent.title}</h1>
+                  </div>
+                  <div 
+                    className="article-body" 
+                    dangerouslySetInnerHTML={renderMarkdown(postContent.body)} 
+                  />
+                </article>
+              )}
             </div>
-          ) : (
-            /* Home Mode */
-            <>
-              {/* Hero Section */}
-              <section className="hero-section">
+          </div>
+        ) : (
+          /* Standard Sections Layout */
+          <>
+            {/* 1. Welcome / About Section */}
+            <section id="about" className="page-section">
+              <div className="container-site hero-grid">
                 <div className="hero-text-container">
-                  <h1 className="hero-title">
-                    <span className="name">Hi There, I am Usman.</span>
-                    <span className="role">I am into Data Engineering</span>
+                  <h1 className="hero-tagline">
+                    Hi There, I am Usman.
+                    <span className="hero-tagline-muted">I am into Data Engineering</span>
                   </h1>
                   <p className="hero-description">
                     Building robust, scalable data pipelines and managing large-scale database infrastructure to convert raw numbers into structured, impactful intelligence.
                   </p>
-                  <div className="contact-row">
+                  <div className="social-icons-row">
                     <a 
                       href="https://www.linkedin.com/in/usmankamran/" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="social-icon-btn linkedin"
-                      title="LinkedIn Profile"
+                      className="social-btn"
+                      title="LinkedIn"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-linkedin"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                     </a>
                     <a 
                       href="https://github.com/K-Usman" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="social-icon-btn github"
-                      title="GitHub Profile"
+                      className="social-btn"
+                      title="GitHub"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-github"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
                     </a>
                     <a 
                       href="mailto:me@usmankamran.de" 
-                      className="social-icon-btn email"
-                      title="Send Email"
+                      className="social-btn"
+                      title="Email"
                     >
-                      <Mail size={22} />
+                      <Mail size={18} />
                     </a>
                   </div>
                 </div>
-                <div className="hero-image-container">
-                  <div className="profile-pic-wrapper">
+
+                <div className="profile-image-container">
+                  <div className="profile-border-wrapper">
                     <img 
                       src="/Usman_DP.jfif" 
                       alt="Usman's Display Picture" 
-                      className="profile-pic" 
+                      className="profile-display-pic" 
                     />
-                    <div className="pulse-ring"></div>
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              {/* Blog Listings Section */}
-              <section className="posts-section">
-                <h2 className="section-title">
-                  <BookOpen size={22} style={{ color: 'var(--primary-color)' }} />
-                  Recent Notes & Learnings
-                </h2>
+            {/* 2. Recent Notes and Learnings Section */}
+            <section id="blog" className="page-section">
+              <div className="container-site">
+                <p className="section-meta-heading text-mono">Notes from the Pipeline</p>
+                <h2 className="section-main-title">Recent Notes & Learnings</h2>
 
-                {loading && posts.length === 0 ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
-                    <Loader2 className="animate-spin" size={32} style={{ color: 'var(--primary-color)' }} />
-                  </div>
-                ) : posts.length > 0 ? (
-                  <div className="posts-grid">
-                    {posts.map((post) => (
-                      <div 
-                        key={post.slug} 
-                        className="post-card" 
-                        onClick={() => setSelectedPost(post)}
-                      >
-                        <div>
-                          <div className="post-header">
-                            <h3 className="post-title">{post.title}</h3>
-                            <span className="post-date">{formatDate(post.date)}</span>
-                          </div>
-                          <p className="post-description">{post.description}</p>
-                        </div>
-                        <div className="post-footer">
-                          Read Full Article <ArrowRight size={16} />
-                        </div>
+                <div className="blog-cards-grid">
+                  {POSTS_METADATA.map((post) => (
+                    <article key={post.slug} className="blog-item-card">
+                      <div className="card-top-meta text-mono">{formatDate(post.date)}</div>
+                      <h3 className="card-title">{post.title}</h3>
+                      <p className="card-excerpt">{post.description}</p>
+                      <div className="card-bottom-row">
+                        <button className="read-article-btn text-mono" onClick={() => navigateTo(`/blog/${post.slug}`)}>
+                          Read The Article <ArrowRight size={12} />
+                        </button>
                       </div>
-                    ))}
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* 3. The Tech Stack Section */}
+            <section id="stack" className="page-section">
+              <div className="container-site">
+                <p className="section-meta-heading text-mono">My Toolkit</p>
+                <h2 className="section-main-title">The Tech Stack</h2>
+
+                <div className="tech-stack-grid">
+                  <div className="tech-column">
+                    <h3 className="tech-column-title">Languages</h3>
+                    <div className="tech-tags-list">
+                      <span className="tech-tag text-mono">Python</span>
+                      <span className="tech-tag text-mono">SQL</span>
+                      <span className="tech-tag text-mono">TypeScript</span>
+                      <span className="tech-tag text-mono">Shell Script</span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="empty-posts">
-                    <p>No blog posts found.</p>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                      Log in to the CMS Portal above to write your first post.
-                    </p>
+
+                  <div className="tech-column">
+                    <h3 className="tech-column-title">Tools & Frameworks</h3>
+                    <div className="tech-tags-list">
+                      <span className="tech-tag text-mono">dbt</span>
+                      <span className="tech-tag text-mono">Apache Airflow</span>
+                      <span className="tech-tag text-mono">Apache Spark</span>
+                      <span className="tech-tag text-mono">Docker</span>
+                      <span className="tech-tag text-mono">Git</span>
+                    </div>
                   </div>
-                )}
-              </section>
-            </>
-          )}
-        </div>
+
+                  <div className="tech-column">
+                    <h3 className="tech-column-title">IDE's</h3>
+                    <div className="tech-tags-list">
+                      <span className="tech-tag text-mono">VS Code</span>
+                      <span className="tech-tag text-mono">PyCharm</span>
+                      <span className="tech-tag text-mono">Jupyter</span>
+                    </div>
+                  </div>
+
+                  <div className="tech-column">
+                    <h3 className="tech-column-title">Cloud Platforms</h3>
+                    <div className="tech-tags-list">
+                      <span className="tech-tag text-mono">GCP</span>
+                      <span className="tech-tag text-mono">AWS</span>
+                      <span className="tech-tag text-mono">Snowflake</span>
+                      <span className="tech-tag text-mono">BigQuery</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
       </main>
 
-      <footer className="footer">
-        <div className="container">
-          <p>© {new Date().getFullYear()} Usman Kamran. Built with React + Decap CMS.</p>
+      <footer id="contact" className="footer">
+        <div className="container-site footer-grid">
+          <div>
+            <div className="logo-container" style={{ marginBottom: '1rem' }}>
+              <span className="logo-badge">UK</span>
+              <span className="logo-text">Usman <span className="logo-text-muted">Kamran</span></span>
+            </div>
+            <p className="footer-description">
+              Data Engineer focused on building verifiably correct pipelines and robust data systems. Let's build something together.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="footer-links-title text-mono">Contact Details</h3>
+            <div className="footer-links-list">
+              <a href="mailto:me@usmankamran.de" className="footer-link-item text-mono">me@usmankamran.de</a>
+              <span className="footer-link-item text-mono" style={{ color: 'var(--text-ink-muted)' }}>+49 179 6816222</span>
+              <span className="footer-link-item text-mono" style={{ color: 'var(--text-ink-muted)' }}>Bad Homburg, Germany</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="container-site footer-bottom-row text-mono" style={{ fontSize: '10px' }}>
+          <span>© {new Date().getFullYear()} Usman Kamran. All rights reserved.</span>
+          <span>usmankamran.de</span>
         </div>
       </footer>
     </div>

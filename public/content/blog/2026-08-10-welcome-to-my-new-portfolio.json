@@ -1,6 +1,0 @@
-{
-  "title": "Welcome to my new Portfolio!",
-  "date": "2026-08-10T18:00:00.000Z",
-  "description": "Welcome to my updated personal website built with React, Vite, and Decap CMS.",
-  "body": "Hi everyone!\n\nI have revamped my website to make it cleaner, faster, and more concise. I migrated from Gatsby to **Vite + React + TypeScript** and set up **Decap CMS** so I can easily add new blog posts about my learnings and portfolio projects.\n\n### What I do\nI am Usman, a **Data Engineer** passionate about building robust data pipelines, processing large datasets, and optimizing data infrastructure.\n\nStay tuned for more posts about data engineering, cloud platforms, Python, SQL, and database technologies!"
-}
