@@ -41,6 +41,12 @@ const POSTS_METADATA: PostMetadata[] = [
     title: 'Best Practices for dbt (Data Build Tool)',
     date: '2026-07-22',
     description: 'How to structure your dbt projects for cleaner, more maintainable data models.'
+  },
+    {
+    slug: 'scalable-data-lakes',
+    title: 'How to Scale Data Lakes',
+    date: '2026-08-20',
+    description: 'A practical guide to organizing cloud object stores for large-scale query engines.'
   }
 ];
 
@@ -434,14 +440,12 @@ function App() {
             <h3 className="footer-links-title text-mono">Contact Details</h3>
             <div className="footer-links-list">
               <a href="mailto:me@usmankamran.de" className="footer-link-item text-mono">me@usmankamran.de</a>
-              <span className="footer-link-item text-mono" style={{ color: 'var(--text-ink-muted)' }}>+49 179 6816222</span>
               <span className="footer-link-item text-mono" style={{ color: 'var(--text-ink-muted)' }}>Bad Homburg, Germany</span>
             </div>
           </div>
         </div>
 
         <div className="container-site footer-bottom-row text-mono" style={{ fontSize: '10px' }}>
-          <span>© {new Date().getFullYear()} Usman Kamran. All rights reserved.</span>
           <span>usmankamran.de</span>
         </div>
       </footer>
