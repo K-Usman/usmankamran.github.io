@@ -48,6 +48,7 @@ function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [postContent, setPostContent] = useState<ParsedPost | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Sync state with popstate event (browser back/forward button clicks)
   useEffect(() => {
@@ -75,15 +76,17 @@ function App() {
   useEffect(() => {
     if (!selectedPostSlug) {
       setPostContent(null);
+      setFetchError(null);
       return;
     }
 
     const fetchPost = async () => {
       setLoadingPost(true);
+      setFetchError(null);
       try {
         const response = await fetch(`/content/blog/${selectedPostSlug}.md`);
         if (!response.ok) {
-          throw new Error('Failed to fetch markdown file');
+          throw new Error(`Failed to load article (${response.status} ${response.statusText})`);
         }
         const text = await response.text();
         
@@ -122,8 +125,9 @@ function App() {
             body: normalizedText
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching markdown post:', err);
+        setFetchError(err.message || 'An unknown error occurred while loading the article.');
       } finally {
         setLoadingPost(false);
       }
@@ -258,11 +262,18 @@ function App() {
                 <ArrowLeft size={12} /> Back to home
               </button>
 
-              {loadingPost || !postContent ? (
+              {loadingPost ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
                   <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent-color)' }} />
                 </div>
-              ) : (
+              ) : fetchError ? (
+                <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+                  <p style={{ color: '#bc4749', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.2rem', marginBottom: '1rem' }}>{fetchError}</p>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--text-ink-muted)', maxWidth: '500px', margin: '0 auto' }}>
+                    There was an issue fetching the article content from the server. Please check your network connection, ensure the file exists on the server, or try reloading the page.
+                  </p>
+                </div>
+              ) : postContent ? (
                 <article>
                   <div className="article-header">
                     <div className="article-meta text-mono">{formatDate(postContent.date)}</div>
@@ -273,7 +284,7 @@ function App() {
                     dangerouslySetInnerHTML={renderMarkdown(postContent.body)} 
                   />
                 </article>
-              )}
+              ) : null}
             </div>
           </div>
         ) : (
