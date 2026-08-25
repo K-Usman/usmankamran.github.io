@@ -562,3 +562,47 @@
     transform: translateY(0);
   }
 }
+
+/* Markdown Table Styling matching GipfelLabs design */
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2.5rem 0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.article-body th {
+  background-color: var(--accent-color-light);
+  color: var(--accent-color);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 2px solid var(--border-line);
+}
+
+.article-body th, 
+.article-body td {
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--border-line);
+}
+
+.article-body tr:nth-child(even) {
+  background-color: rgba(245, 244, 240, 0.4);
+}
+
+.article-body tr:hover {
+  background-color: rgba(245, 244, 240, 0.85);
+}
+
+/* Link styling inside markdown */
+.article-body a {
+  color: var(--accent-color);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.article-body a:hover {
+  color: var(--accent-color-hover);
+}
+

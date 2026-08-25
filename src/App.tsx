@@ -7,6 +7,8 @@ import {
   ArrowRight, 
   Loader2 
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './App.css';
 
 interface PostMetadata {
@@ -154,76 +156,7 @@ function App() {
     }
   };
 
-  // Simple Markdown Renderer
-  const renderMarkdown = (md: string) => {
-    // Escaping basic HTML to prevent XSS
-    let html = md
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
 
-    // Images (e.g. ![alt](url)) - Self-heals Windows backslashes automatically
-    html = html.replace(/!\[(.*?)\]\((.*?)\)/g, (_match, alt, url) => {
-      const normalizedUrl = url.replace(/\\/g, '/');
-      return `<img src="${normalizedUrl}" alt="${alt}" style="max-width: 100%; height: auto; display: block; margin: 1.5rem 0; border: 1px solid var(--border-line); background: var(--bg-surface); padding: 0.5rem;" />`;
-    });
-
-    // Inline Links (e.g. [text](url))
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, (_match, text, url) => {
-      const normalizedUrl = url.replace(/\\/g, '/');
-      return `<a href="${normalizedUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-    });
-
-    // Headings
-    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
-
-    // Bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Unordered Lists
-    let inList = false;
-    const lines = html.split('\n');
-    const processedLines = lines.map(line => {
-      const listMatch = line.match(/^[-*]\s+(.+)$/);
-      if (listMatch) {
-        let result = '';
-        if (!inList) {
-          inList = true;
-          result += '<ul>';
-        }
-        result += `<li>${listMatch[1]}</li>`;
-        return result;
-      } else {
-        let result = '';
-        if (inList) {
-          inList = false;
-          result += '</ul>';
-        }
-        return result + line;
-      }
-    });
-    if (inList) {
-      processedLines.push('</ul>');
-    }
-    html = processedLines.join('\n');
-
-    // Paragraphs
-    const blockTags = ['<h3>', '<h2>', '<h1>', '<ul>', '</ul>', '<li>', '<img', '<a'];
-    html = html
-      .split('\n')
-      .map(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return '';
-        const isBlock = blockTags.some(tag => trimmed.startsWith(tag) || trimmed.endsWith(tag));
-        return isBlock ? trimmed : `<p>${trimmed}</p>`;
-      })
-      .filter(Boolean)
-      .join('');
-
-    return { __html: html };
-  };
 
   const formatDate = (dateStr: string) => {
     try {
@@ -321,10 +254,41 @@ function App() {
                   ) : postContent ? (
                     <article>
                       <h1 className="article-title" style={{ marginBottom: '2.5rem' }}>{postContent.title}</h1>
-                      <div 
-                        className="article-body" 
-                        dangerouslySetInnerHTML={renderMarkdown(postContent.body)} 
-                      />
+                      <div className="article-body">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            img: ({ src, alt }) => {
+                              const normalizedSrc = src ? src.replace(/\\/g, '/') : '';
+                              return (
+                                <img 
+                                  src={normalizedSrc} 
+                                  alt={alt} 
+                                  style={{
+                                    maxWidth: '100%',
+                                    height: 'auto',
+                                    display: 'block',
+                                    margin: '1.5rem 0',
+                                    border: '1px solid var(--border-line)',
+                                    background: 'var(--bg-surface)',
+                                    padding: '0.5rem'
+                                  }} 
+                                />
+                              );
+                            },
+                            a: ({ href, children }) => {
+                              const normalizedHref = href ? href.replace(/\\/g, '/') : '';
+                              return (
+                                <a href={normalizedHref} target="_blank" rel="noopener noreferrer">
+                                  {children}
+                                </a>
+                              );
+                            }
+                          }}
+                        >
+                          {postContent.body}
+                        </ReactMarkdown>
+                      </div>
                     </article>
                   ) : null}
                 </div>
