@@ -377,6 +377,10 @@
   top: 7rem;
 }
 
+.article-right-col {
+  min-width: 0;
+}
+
 @media (max-width: 900px) {
   .article-left-col {
     position: static;
@@ -567,7 +571,9 @@
 
 /* Markdown Table Styling matching GipfelLabs design */
 .article-body table {
+  display: block;
   width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   margin: 2.5rem 0;
   font-family: var(--font-body);
@@ -581,12 +587,17 @@
   font-weight: 600;
   text-align: left;
   border-bottom: 2px solid var(--border-line);
+  white-space: nowrap;
 }
 
 .article-body th, 
 .article-body td {
   padding: 0.85rem 1.25rem;
   border: 1px solid var(--border-line);
+}
+
+.article-body td {
+  white-space: nowrap;
 }
 
 .article-body tr:nth-child(even) {
@@ -606,5 +617,43 @@
 
 .article-body a:hover {
   color: var(--accent-color-hover);
+}
+
+/* Paragraph line wrapping rules */
+.article-body p {
+  margin-bottom: 1.5rem;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Inline code block wrapping */
+.article-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background-color: var(--bg-surface-hover);
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--border-line);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* Preformatted code block scrolling */
+.article-body pre {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--bg-surface-hover);
+  border: 1px solid var(--border-line);
+  padding: 1.25rem;
+  margin: 2rem 0;
+}
+
+.article-body pre code {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  font-size: 0.9em;
+  white-space: pre;
+  word-break: normal;
+  word-wrap: normal;
 }
 
