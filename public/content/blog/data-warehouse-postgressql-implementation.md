@@ -6,8 +6,8 @@ description: Built an end-to-end data warehouse in PostgreSQL using Medallion ar
 In this project I will implement a complete data warehouse solution using Medallion Architecture including star schema and Slowly Changing Dimension Type 2 and a simple dashboard using Power BI.
 
 ## 1. Explore source data
-We have data coming from two source systems CRM and ERP. The source data is available as CSV files on my local machine. 
-The source csv files are `cust_info.csv`, `prd_info.csv`, `sales_details.csv` from CRM and `CUST_AZ12.csv`, `LOC_A101.csv` , `PX_CAT_G1V2.csv` from ERP. 
+We have data coming from two source systems CRM and ERP. The source data is available as CSV files on my local machine.  
+The source csv files are `cust_info.csv`, `prd_info.csv`, `sales_details.csv` from CRM and `CUST_AZ12.csv`, `LOC_A101.csv` , `PX_CAT_G1V2.csv` from ERP.  
 ### Customer Schema (CRM source)
 | cst_id | cst_key | cst_firstname | cst_lastname | cst_marital_status | cst_gndr | cst_create_date |
 |---|---|---|---|---|---|---|
