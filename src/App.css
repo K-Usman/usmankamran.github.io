@@ -360,8 +360,8 @@
 
 .article-grid {
   display: grid;
-  grid-template-columns: 0.22fr 0.78fr;
-  gap: 5rem;
+  grid-template-columns: 220px 1fr;
+  gap: 4rem;
   align-items: start;
 }
 
@@ -408,12 +408,14 @@
   color: var(--text-ink-faint);
   font-size: 0.75rem;
   margin-bottom: 0.25rem;
+  white-space: nowrap;
 }
 
 .metadata-item-value {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-ink-muted);
+  white-space: nowrap;
 }
 
 .btn-back {
