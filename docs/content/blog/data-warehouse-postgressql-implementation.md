@@ -178,7 +178,7 @@ BEGIN
 ```  
 ## 4. Gold Layer - Dimensional Modelling
 We will use the following star schema dimension model for analytics.  
-
+![Star Schema](/images/Dimensional_Model.png)  
 The gold layer will be utilized as views in PostgreSQL.    
 #### Script for creating gold layer customer dimension table as a view  
 ```sql
@@ -207,8 +207,27 @@ LEFT JOIN silver.customer_location loc
 LEFT JOIN silver.customer_details cd
 	ON c.customer_id=cd.customer_id;
 ```
+### Test SCD Type 2  
+```sql
+-- Update a record in the source table i.e update lastname from 'Huang' to 'Huangg'
+UPDATE bronze.crm_cust_info
+SET cst_lastname='Huangg'
+where cst_id=11001;
+
+-- Insert data
+Call silver.load_silver();
+
+-- query the same customer whose dimension has been changed
+Select * from gold.dim_customer
+where customer_id=11001
+```  
+We can see in the dim_customer view, the history has been saved.  
+![SCD History](/images/SCD_Test.png)
+
 ## 5. Power BI Analytics
-Here is the Power BI Dashboard created based on star schema answering basic analytics questions:
+The data warehouse is connected to Power BI, which synchronizes with the Gold-layer views as new data flows through the pipeline.  
+
+I created the dashboard using basic charts and tables to calculate and visualize metrics such as revenue by category and revenue by country, without DAX or semantic layer.  
 ![BI Report](/images/report.png)
 
 ## View the code on GitHub
