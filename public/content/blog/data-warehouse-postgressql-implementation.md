@@ -23,8 +23,8 @@ Similar schemas are available for the **product** and **sales** data in the CRM 
 
 ## 2. Bronze Layer - Extract and Load
 After getting to know source data and the schemata. We will specify the similar tables definitions in the bronze layer and create tables in the data warehouse. Bronze layer is our staging layer and will contain raw source data. Therefore, bronze layer tables will be same as our source csv files.  
-DDL for customer table. Other tables in bronze layer will be created in similar way.
-`` sql
+DDL for customer table. Other tables in bronze layer will be created in similar way.  
+```sql
 CREATE TABLE bronze.crm_cust_info(
 	cst_id INT,
 	cst_key varchar(50),
