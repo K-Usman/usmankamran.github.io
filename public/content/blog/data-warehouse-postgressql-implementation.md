@@ -8,7 +8,7 @@ Here is a diagram representing the data architecture:
 
 ![Architecture](\images\Architecture.png)
 
-
+View the code on [github](https://github.com/K-Usman/PostgreSQL-Data-Warehouse-with-Medallion-Architecture)_
 
 Here is the Power BI Dashboard created based on star schema answering basic analytics questions:
 ![BI Report](\images\report.png)
