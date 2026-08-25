@@ -26,28 +26,10 @@ interface ParsedPost {
 
 const POSTS_METADATA: PostMetadata[] = [
   {
-    slug: 'welcome-to-my-new-portfolio',
-    title: 'Welcome to my new Portfolio!',
-    date: '2026-08-15',
-    description: 'An introduction to my updated personal website, built with React, Vite, and simple Markdown.'
-  },
-  {
-    slug: 'understanding-data-pipelines',
-    title: 'Understanding Modern Data Pipelines',
-    date: '2026-08-18',
-    description: 'An introduction to the architecture of robust and scalable data pipelines.'
-  },
-  {
-    slug: 'dbt-best-practices',
-    title: 'Best Practices for dbt (Data Build Tool)',
-    date: '2026-08-17',
-    description: 'How to structure your dbt projects for cleaner, more maintainable data models.'
-  },
-    {
-    slug: 'scalable-data-lakes',
-    title: 'How to Scale Data Lakes',
-    date: '2026-08-16',
-    description: 'A practical guide to organizing cloud object stores for large-scale query engines.'
+    slug: 'data-warehouse-postgressql-implementation',
+    title: 'Data Warehouse and Star Schema Implementation with PostgreSQL using Medallion Architecture',
+    date: '2026-08-25',
+    description: 'Built an end-to-end data warehouse in PostgreSQL using Medallion architecture (Bronze → Silver → Gold), implementing Slowly Changing Dimension Type 2 (SCD2) to track historical changes and a star schema for analytics-ready reporting in Power BI.'
   }
 ];
 
