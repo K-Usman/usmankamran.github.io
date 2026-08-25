@@ -3,7 +3,8 @@ title: Data Warehouse and Star Schema Implementation with PostgreSQL using Medal
 date: 2026-08-25
 description: Built an end-to-end data warehouse in PostgreSQL using Medallion architecture (Bronze → Silver → Gold), implementing Slowly Changing Dimension Type 2 (SCD2) to track historical changes and a star schema for analytics-ready reporting in Power BI.
 ---
-In this project I will implement a complete data warehouse solution using Medallion Architecture including star schema and Slowly Changing Dimension Type 2 and a simple dashboard using Power BI.
+![Architecture](/images/Architecture.png)  
+In this project I will implement a complete data warehouse solution using Medallion Architecture including star schema and Slowly Changing Dimension Type 2 and a simple dashboard using Power BI.  
 
 ## 1. Explore Source Data
 
@@ -105,10 +106,10 @@ where is_current is TRUE;
 ```
 ### Silver Layer - Transform Data  
 We will do following transformations and data standardizations.  
-    - Implementation of SCD Type 2 on customer and customer location tables.
-	- Standardization for country, dates etc columns.
-	- Null Handling.
-	- Data Enrichment. 
+    - Implementation of SCD Type 2 on customer and customer location tables.  
+	- Standardization for country, dates etc columns.  
+	- Null Handling.  
+	- Data Enrichment.  
 ```sql
 DROP PROCEDURE IF EXISTS silver.load_silver;
 CREATE PROCEDURE silver.load_silver()
@@ -176,16 +177,42 @@ BEGIN
         ...
 ```  
 ## 4. Gold Layer - Dimensional Modelling
+We will use the following star schema dimension model for analytics.  
 
+The gold layer will be utilized as views in PostgreSQL.    
+#### Script for creating gold layer customer dimension table as a view  
+```sql
+-- CREATE customer dimension by joining customer, customer_detail and customer_location tables
+DROP VIEW gold.dim_customer;
+CREATE VIEW gold.dim_customer AS
+SELECT c.customer_sk,
+	   c.customer_id,
+	   c.first_name,
+	   c.last_name,
+	   c.marital_status,
+	   COALESCE(c.gender,cd.gender) as gender,
+	   cd.birth_date,
+	   loc.country,
+	   c.valid_from,
+       c.valid_to,
+       c.is_current
+FROM silver.customer c
+LEFT JOIN silver.customer_location loc
+	ON c.customer_id=loc.customer_id
+	AND loc.valid_from <= c.valid_from
+    AND (loc.valid_to > c.valid_from OR loc.valid_to IS NULL)
+	-- This dimension is only recording customer history. If a location changes but customer doesn't at the same time
+	-- this logic will fail and will take old location value because new locations value_from > customers value_from
+	-- I will fix this later after learning more about these patterns.
+LEFT JOIN silver.customer_details cd
+	ON c.customer_id=cd.customer_id;
+```
 ## 5. Power BI Analytics
-
-Here is a diagram representing the data architecture:
-
-![Architecture](/images/Architecture.png)
+Here is the Power BI Dashboard created based on star schema answering basic analytics questions:
+![BI Report](/images/report.png)
 
 ## View the code on GitHub
 
 🔗 **[GitHub Repository](https://github.com/K-Usman/PostgreSQL-Data-Warehouse-with-Medallion-Architecture)**
 
-Here is the Power BI Dashboard created based on star schema answering basic analytics questions:
-![BI Report](/images/report.png)
+
