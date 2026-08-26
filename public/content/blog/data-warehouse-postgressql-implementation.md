@@ -7,6 +7,9 @@ description: Built an end-to-end data warehouse in PostgreSQL using Medallion ar
 ## View the code on GitHub
 
 🔗 **[GitHub Repository](https://github.com/K-Usman/PostgreSQL-Data-Warehouse-with-Medallion-Architecture)**   
+
+
+
 In this project I will implement a complete data warehouse solution using Medallion Architecture including star schema and Slowly Changing Dimension Type 2 and a simple dashboard using Power BI.  
 
 ## 1. Explore Source Data
