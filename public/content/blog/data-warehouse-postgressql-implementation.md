@@ -4,6 +4,9 @@ date: 2026-08-25
 description: Built an end-to-end data warehouse in PostgreSQL using Medallion architecture (Bronze → Silver → Gold), implementing Slowly Changing Dimension Type 2 (SCD2) to track historical changes and a star schema for analytics-ready reporting in Power BI.
 ---
 ![Architecture](/images/Architecture.png)  
+## View the code on GitHub
+
+🔗 **[GitHub Repository](https://github.com/K-Usman/PostgreSQL-Data-Warehouse-with-Medallion-Architecture)**   
 In this project I will implement a complete data warehouse solution using Medallion Architecture including star schema and Slowly Changing Dimension Type 2 and a simple dashboard using Power BI.  
 
 ## 1. Explore Source Data
@@ -230,8 +233,6 @@ The data warehouse is connected to Power BI, which synchronizes with the Gold-la
 I created the dashboard using basic charts and tables to calculate and visualize metrics such as revenue by category and revenue by country, without DAX or semantic layer.  
 ![BI Report](/images/report.png)
 
-## View the code on GitHub
 
-🔗 **[GitHub Repository](https://github.com/K-Usman/PostgreSQL-Data-Warehouse-with-Medallion-Architecture)**
 
 
