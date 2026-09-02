@@ -223,12 +223,12 @@ CLUSTER orders USING idx_orders_customer_id;
 ```
 
 ### Extended Statistics
-If `customer_id 99` always does a test order whose `status=cancelled`, and in a table with 1,000,000 orders, `customer_id 99` has 10% of orders and cancelled orders are also 10%.
+Suppose if `customer_id 99` always does a test order whose `status=cancelled`, and in a table with 1,000,000 orders, `customer_id 99` has 10% of orders and cancelled orders are also 10%.
 
 ```sql
 SELECT * FROM orders WHERE customer_id = 99 AND status = 'cancelled';
 ```
-The planner multiplies this value `10% * 10% = 1%`, which is 10,000 rows. Since the estimate is small, it will use an index scan. But in reality, the query returns 100,000 records (10%) because *all* of customer 99's orders are cancelled.
+The planner multiplies this value `0.1 * 0.1 = 0.1 = 1%`, which is 10,000 rows. Since the estimate is small, it will use an index scan. But in reality, the query returns 100,000 records (10%) because *all* of customer 99's orders are cancelled.
 
 Fix this by creating extended statistics between `customer_id` and `status`:  
 ```sql
