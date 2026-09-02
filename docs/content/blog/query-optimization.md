@@ -45,8 +45,8 @@ Every query optimization technique generally falls into one of three buckets:
 > **Tip:** Always inspect your execution plans using `EXPLAIN ANALYZE` before making changes. Measure twice, optimize once! 
   
 ## 2. Indexes  
-**EXPLAIN command** : shows the estimated plan without running the query.
-**EXPLAIN ANALYZE command**: Actually executes the query and shows the costs.  
+**EXPLAIN command** : shows the estimated plan without running the query.  
+**EXPLAIN ANALYZE command**: Actually executes the query and shows the costs.   
 
 ```sql
 EXPLAIN SELECT * FROM orders WHERE customer_id = 42;
@@ -59,7 +59,6 @@ Gather  (cost=1000.00..26130.87 rows=22 width=27)
   ->  Parallel Seq Scan on orders  (cost=0.00..25128.67 rows=9 width=27)
         Filter: (customer_id = 42)
 ```
-*Notes: `(cost=1000.00..26130.87 rows=22 width=27)` — total costs. Width is the estimated average size of a single row (all columns combined, e.g., 27 bytes of memory). Sequential scan was done in parallel by 2 workers (costs 25128.67).*
 
 ### How do we know we need an index from the above results?
 1. **High Cost for Few Rows:** `Cost=26130` for `22 rows`. Doing 26,000 units of work to find 22 items means the database is working incredibly hard to find a tiny amount of data.
@@ -67,8 +66,6 @@ Gather  (cost=1000.00..26130.87 rows=22 width=27)
 3. **Parallel Workers:** PostgreSQL only decides to spin up parallel workers when it realizes a Sequential Scan is going to be massive and painfully slow for a single CPU core to handle.
 
 ---
-
-`EXPLAIN (ANALYZE, BUFFERS) [Query]` — Actually executes the query and shows the costs.
 
 ```sql
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
@@ -88,7 +85,7 @@ Planning Time: 0.174 ms
 Execution Time: 102.880 ms
 ```
 *Notes:*
-* `cost=26130.87` is the estimated cost. `rows=19` is actual rows. `loops=1` means gather operation happened one single time.
+* `cost=26130.87` is the estimated cost. `rows=19` is actual rows. `loops=1` means gather operation happened one single time. `width=27` is the estimated average size of a single row (all columns combined, e.g., 27 bytes of memory)
 * `Buffers: shared hit=14712` represents total memory usage. The database had to read 14,712 memory pages (about 117 MB of data). `shared hit` means every single page was already sitting in fast RAM.
 * `loops=3` (in the Parallel Seq Scan) means 3 separate processes: 2 workers and 1 gather.
 * `Execution Time: 102.880 ms` is always the outer node time (in this case, gather node time).
@@ -101,7 +98,10 @@ VACUUM FULL ANALYZE orders;
 ```
 *(Note: This creates a new orders table and deletes the old one. While `VACUUM FULL` is running, the orders table is locked for updates, inserts, etc.)*
 
-### After creating an index on `orders(customer_id)`:
+### Running the same query after creating an index on `orders(customer_id)`:
+```sql
+CREATE INDEX idx_orders_customerid on orders(customer_id);
+```
 
 **Execution Plan:**
 ```text
@@ -117,12 +117,13 @@ Execution Time: 0.058 ms
 ```
 
 **Query execution step-by-step:**
-* **Bitmap Index Scan:** Creates a bitmap—a map of memory locations pointing to the specific data blocks in the table that contain these rows. It reads 3 memory blocks from the index (`Buffers: shared hit=3`), and these were already cached in RAM.
+* **Bitmap Index Scan:** Creates a bitmap, a map of memory locations pointing to the specific data blocks in the table that contain these rows. It reads 3 memory blocks from the index (`Buffers: shared hit=3`), and these were already cached in RAM.
 * **Bitmap Heap Scan:** Uses the bitmap from the previous step to fetch actual values. `Buffers: shared hit=22` (19 heap blocks + 3 index blocks). `Heap Blocks: exact=19` means the DB has to open 19 data blocks.
 
 *Note: Sometimes the planner ignores the index when the queried data is about 10% of all data and will use a seq scan. Because it is expensive to go back and forth (read the index and go back to the main table to fetch the actual row data).*
 
 ### Covering Index
+A covering index is an index that contains all the columns a query needs, so PostgreSQL can potentially answer the query without reading the actual table (heap) - *ChatGPT*  
 Build a normal, searchable index on `customer_id`. But while you are at it, secretly pack a copy of the `status` and `total_cents` data right next to it:
 
 ```sql
@@ -135,8 +136,36 @@ After creating the covering index, the following query will result in an **Index
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT status, total_cents FROM orders WHERE customer_id = 42;
 ```
-*Note: Sometimes we need to use `VACUUM ANALYZE orders` to update the visibility map.*
+```
+"Index Only Scan using idx_orders_covering on orders  (cost=0.43..4.83 rows=23 width=11) (actual time=0.017..0.021 rows=19 loops=1)"
+"  Index Cond: (customer_id = 42)"
+"  Heap Fetches: 0"
+"  Buffers: shared hit=4"
+"Planning:"
+"  Buffers: shared hit=17"
+"Planning Time: 0.200 ms"
+"Execution Time: 0.041 ms"
 
+```
+*Note: Sometimes we need to use `VACUUM ANALYZE orders` to update the visibility map.*  
+### Partial Index  
+If you mostly filter a subset of data, create index only on that subset, this is smaller, faster and cheaper to maintain.  
+```sql
+CREATE INDEX idx_orders_pending ON orders(created_at) WHERE status = 'pending';
+
+EXPLAIN ANALYZE
+SELECT * FROM orders WHERE status = 'pending' AND created_at > now() - interval '7 days';
+```
+### Expression Index  
+A index only helps if the  where clause matches its exact form. Wrapping an indexed column in a function will not use the index.  
+```sql
+-- Won't use a plain index on email:
+EXPLAIN ANALYZE SELECT * FROM customers WHERE lower(email) = 'user500@example.com';
+
+-- Fix: index the expression itself
+CREATE INDEX idx_customers_email_lower ON customers(lower(email));
+EXPLAIN ANALYZE SELECT * FROM customers WHERE lower(email) = 'user500@example.com';
+```
 ---
 
 ## Statistics — Feeding the Planner Good Information
