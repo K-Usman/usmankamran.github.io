@@ -8,7 +8,7 @@ description: A guide to sql query optimization and a detailed look at execution 
 
 # Database Query Optimization: A Guide for Data & Analytics Engineers
 
-Database optimization plays a critical role in data and analytics engineering. Instead of blindly provisioning more compute resources, writing efficient queries saves money and scales performance, much like designing algorithms to run in linear time. 
+Database optimization plays a critical role in data and analytics engineering. Instead of blindly provisioning more compute resources, writing efficient queries saves money and scales performance.
 
 This post covers the core techniques you need to master query optimization, starting with how the database engine thinks.
 
