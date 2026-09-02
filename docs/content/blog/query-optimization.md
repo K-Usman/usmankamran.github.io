@@ -170,7 +170,7 @@ EXPLAIN ANALYZE SELECT * FROM customers WHERE lower(email) = 'user500@example.co
 
 ## Statistics — Feeding the Planner Good Information
 
-From `pg_statistics`, you can see the distinct values:
+From `pg_statistics`, you can see the table statistics that Postgres uses to create executing plans:  
 
 ```sql
 SELECT attname, n_distinct, most_common_vals, correlation
@@ -183,24 +183,25 @@ Indicates how many different customers exist in the table.
 * **Positive number (e.g., 5000):** There are exactly 5000 unique customers. Happens when the number of unique values in a column is fixed and rarely changes.
 * **Negative number (e.g., -0.5):** This is a percentage. It means 50% of values are unique. Happens when the number of unique values scales up as the table grows.
 
-**How is it calculated?** The database does a "taste test." It reads 30,000 rows by default and decides based on how data is changing to give `n_distinct` a positive or negative value. 
-* *Positive:* When the number of unique values stops growing in the first 30,000 rows.
-* *Negative:* By the end of 30,000 reads, it finds 25,000 unique customers. The database calculates the ratio 25,000 / 30,000 = 0.83. So `n_distinct = -0.83` (83% of customers are unique).
-* *10% Tipping point:* If the database estimates that the total number of unique values is less than 10% of the total rows in the table, it usually decides the data has flatlined and assigns a positive exact number. (e.g., 90,823 which is 4.5% of the whole table).
+**How is it calculated?**  
+The database does a "taste test." It reads 30,000 rows by default and decides based on how data is changing to give `n_distinct` a positive or negative value. 
+* *Positive:*  When the number of unique values stops growing in the first 30,000 rows.
+* *Negative:*  By the end of 30,000 reads, it finds 25,000 unique customers. The database calculates the ratio 25,000 / 30,000 = 0.83. So `n_distinct = -0.83` (83% of customers are unique).
+* *10% Tipping point:*  If the database estimates that the total number of unique values is less than 10% of the total rows in the table, it usually decides the data has flatlined and assigns a positive exact number. (e.g., 90,823 which is 4.5% of the whole table).
 
 ### 2. `most_common_vals`
-Returns the most frequent record (the outlier, actually). In our query, it might be `1`. If `customer_id=1` is the most frequent record in the table with 40,010 rows, and the planner finds the searched record is in `most_common_vals`, it avoids the index and does a **Bitmap Scan**. The database stays at the index, reads everything first, writes addresses of all 40,010 in your RAM, and builds the bitmap (i.e., Page 5 contains 20 rows, Page 12 contains 5 rows, etc.). Now the database takes this to the main table and gets the relevant rows.
+Returns the most frequent record (the outlier actually). In our query, it might be `1`. If `customer_id=1` is the most frequent record in the table with 40,010 rows, and the planner finds the searched record is in `most_common_vals`, it avoids the index and does a **Bitmap Scan** in which database stays at the index, reads everything first, writes addresses of all 40,010 in your RAM, and builds the bitmap (i.e., Page 5 contains 20 rows, Page 12 contains 5 rows, etc.). Now the database takes this to the main table and gets the relevant rows.
 
 ### 3. `correlation`
-It measures how neatly your data is packed on the physical hard drive, ranging between -1 to 1. `1` means the data on the hard drive is physically sitting in the exact same order as the `customer_ids`. Customer 1's orders are all grouped together, followed by Customer 2, etc.
+It measures how neatly your data is packed on the physical hard drive, ranging between -1 to 1.  `1` means the data on the hard drive is physically sitting in the exact same order as the `customer_ids`. Customer 1's orders are all grouped together, followed by Customer 2, etc.
 
 ### Fixing Bad Statistics
 When a query is slow, compare your `EXPLAIN ANALYZE` output to the `pg_stats` table:
 
-**i. `n_distinct`: Fixing bad row estimates**
-If there is a massive gap between expected rows and actual rows (e.g., rows=10 vs actual rows=50,000), check the `n_distinct` value. Expected rows are calculated by dividing total rows by `n_distinct` rows. If statistics show `n_distinct=100,000` unique rows, `1,000,000 / 100,000 = 10` rows per value. The planner thinks it has to find only 10 rows and uses an index, but in reality, there are 50,000 rows, and reading these via an index is slower than a sequential scan. 
+`n_distinct(Fix bad row estimates)`  
+If there is a massive gap between expected rows and actual rows (e.g., rows=10 vs actual rows=50,000), check the `n_distinct` value. Expected rows are calculated by dividing total rows by `n_distinct` rows. If statistics show `n_distinct=100,000` unique rows, `1,000,000 / 100,000 = 10` rows per value. The planner thinks it has to find only 10 rows and uses an index, but in reality, there are 50,000 rows, and reading these via an index is slower than a sequential scan.  
 
-`ANALYZE {tablename}` reads a random sample using formula: `300 * statistics_target = Sample Size`. By default, `statistics_target=100`, which becomes 30,000. For a 50 million record table, 30,000 is too small to know the diversity, resulting in an inaccurate `n_distinct`.
+`ANALYZE {tablename}` reads a random sample using formula: `300 * statistics_target = Sample Size`. By default, `statistics_target=100`, which becomes 30,000. For a 50 million record table, 30,000 is too small to know the diversity, resulting in an inaccurate `n_distinct`. We need to update the statistics so planner can get better sense of table data.  
 
 ```sql
 ALTER TABLE orders ALTER COLUMN customer_id SET STATISTICS 1000;
@@ -208,14 +209,14 @@ ANALYZE orders;
 ```
 *(This updates `statistics_target` to 1000, making the sample size 300,000, and updates the `n_distinct` values).*
 
-**ii. `most_common_vals`: Fix data skew**
+`most_common_vals(Fix data skew)`  
 If 95% of records belong to customer 1, while thousands of normal customers share the remaining 5%, create a partial index that ignores this customer and provides a hyper-fast index for normal customers:
 
 ```sql
 CREATE INDEX idx_normal_customers ON orders(customer_id) WHERE customer_id != 1;
 ```
 
-**iii. `correlation`: Force physical ordering**
+`correlation(Force physical ordering)`  
 If you see a slow Bitmap Heap Scan where the database has to open thousands of Heap Blocks (bouncing all over the hard drive) just to find a few hundred rows, and your `correlation` score is near 0.00, the data is physically a mess. Use the `CLUSTER` command to force PostgreSQL to physically rewrite the entire table on the hard drive so the rows are neatly packed together based on your index:
 
 ```sql
