@@ -46,8 +46,7 @@ Every query optimization technique generally falls into one of three buckets:
   
 ## 2. Indexes  
 **EXPLAIN command** : shows the estimated plan without running the query.  
-**EXPLAIN ANALYZE command**: Actually executes the query and shows the costs.   
-
+   
 ```sql
 EXPLAIN SELECT * FROM orders WHERE customer_id = 42;
 ```
@@ -66,7 +65,7 @@ Gather  (cost=1000.00..26130.87 rows=22 width=27)
 3. **Parallel Workers:** PostgreSQL only decides to spin up parallel workers when it realizes a Sequential Scan is going to be massive and painfully slow for a single CPU core to handle.
 
 ---
-
+**EXPLAIN ANALYZE command**: Actually executes the query and shows the costs.
 ```sql
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
 ```
@@ -170,7 +169,7 @@ EXPLAIN ANALYZE SELECT * FROM customers WHERE lower(email) = 'user500@example.co
 
 ## Statistics — Feeding the Planner Good Information
 
-From `pg_statistics`, you can see the table statistics that Postgres uses to create executing plans:  
+From `pg_statistics`, you can see the table statistics that Postgres uses to create execution plans:  
 
 ```sql
 SELECT attname, n_distinct, most_common_vals, correlation
@@ -187,7 +186,7 @@ Indicates how many different customers exist in the table.
 The database does a "taste test." It reads 30,000 rows by default and decides based on how data is changing to give `n_distinct` a positive or negative value. 
 * *Positive:*  When the number of unique values stops growing in the first 30,000 rows.
 * *Negative:*  By the end of 30,000 reads, it finds 25,000 unique customers. The database calculates the ratio 25,000 / 30,000 = 0.83. So `n_distinct = -0.83` (83% of customers are unique).
-* *10% Tipping point:*  If the database estimates that the total number of unique values is less than 10% of the total rows in the table, it usually decides the data has flatlined and assigns a positive exact number. (e.g., 90,823 which is 4.5% of the whole table).
+* *10% Tipping point:*  If the database estimates that the total number of unique values is less than 10% of the total rows in the table, it usually decides the data has flatlined and assigns a positive exact number. (e.g., 90,823 which is 4.5% of the whole table of 2M records).
 
 ### 2. `most_common_vals`
 Returns the most frequent record (the outlier actually). In our query, it might be `1`. If `customer_id=1` is the most frequent record in the table with 40,010 rows, and the planner finds the searched record is in `most_common_vals`, it avoids the index and does a **Bitmap Scan** in which database stays at the index, reads everything first, writes addresses of all 40,010 in your RAM, and builds the bitmap (i.e., Page 5 contains 20 rows, Page 12 contains 5 rows, etc.). Now the database takes this to the main table and gets the relevant rows.
@@ -231,12 +230,13 @@ SELECT * FROM orders WHERE customer_id = 99 AND status = 'cancelled';
 ```
 The planner multiplies this value `10% * 10% = 1%`, which is 10,000 rows. Since the estimate is small, it will use an index scan. But in reality, the query returns 100,000 records (10%) because *all* of customer 99's orders are cancelled.
 
-Fix this by creating extended statistics between `customer_id` and `status` as 'dependencies':
+Fix this by creating extended statistics between `customer_id` and `status`:  
 ```sql
-CREATE STATISTICS order_status (dependencies) ON customer_id, status FROM orders;
+CREATE STATISTICS orders_stats (dependencies, ndistinct) ON customer_id, status FROM orders;
+ANALYZE orders;
 ```
 
-The `ndistinct` (N-Distinct) part exists specifically to fix bad math when you use `GROUP BY`:
+The `ndistinct` (N-Distinct) part exists specifically to fix bad math when you use `GROUP BY`:  
 ```sql
 SELECT customer_id, status, COUNT(*) 
 FROM orders 
@@ -358,10 +358,10 @@ auto_explain.log_min_duration = '200ms'
 auto_explain.log_analyze = true
 auto_explain.log_buffers = true
 ```
-If a query takes more than 200 ms, it will trigger an automatic `EXPLAIN ANALYZE` behind the scenes. PostgreSQL will write the complete execution plan—including actual execution times, row counts, and memory buffer usage—directly into the server log file at the exact moment the query finishes.
+If a query takes more than 200 ms, it will trigger an automatic `EXPLAIN ANALYZE` behind the scenes. PostgreSQL will write the complete execution plan,including actual execution times, row counts, and memory buffer usage directly into the server log file at the exact moment the query finishes.
 
 ### 3. Find unused indexes and scan patterns
-**Indexes never used (candidates for removal — they still cost write overhead):**
+**Indexes never used (candidates for removal they still cost write overhead):**
 ```sql
 SELECT relname, indexrelname, idx_scan
 FROM pg_stat_user_indexes
@@ -418,7 +418,7 @@ When you compare two different data types, PostgreSQL forcefully casts one so th
 
 ### 5. Offset and Keyset
 `SELECT * FROM orders ORDER BY created_at DESC LIMIT 20 OFFSET 100000;` Postgres reads the first 100,000 rows and throws them away. CPU and memory cost grows linearly.
-* **The Fix: Keyset Pagination:** Tell the database to give the next 20 rows that come immediately after the last row you just looked at using a "bookmark".
+* **The Fix: Keyset Pagination** tells the database to give the next 20 rows that come immediately after the last row you just looked at using a "bookmark".
   ```sql
   SELECT * FROM orders 
   WHERE created_at < '2026-09-02 01:15:00' 
