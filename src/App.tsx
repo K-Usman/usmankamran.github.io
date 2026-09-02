@@ -28,6 +28,12 @@ interface ParsedPost {
 
 const POSTS_METADATA: PostMetadata[] = [
   {
+    slug: 'query-optimization',
+    title: 'Query Optimization Techniques in PostgreSQL',
+    date: '2026-09-02',
+    description: 'A guide to sql query optimization and a detailed look at execution plans including indexes, join methods, statistics, query monitoring and postgres configuration parameters.'
+  },
+  {
     slug: 'data-warehouse-postgressql-implementation',
     title: 'Data Warehouse and Star Schema Implementation with PostgreSQL using Medallion Architecture',
     date: '2026-08-25',
