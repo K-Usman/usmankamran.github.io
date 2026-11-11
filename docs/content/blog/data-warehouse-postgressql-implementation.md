@@ -165,11 +165,11 @@ BEGIN
 		RAISE NOTICE 'Inserting transformed customer data into silver layer';
 		INSERT INTO silver.customer (
 		    customer_id, customer_key, first_name, last_name, 
-		    marital_status, gender,source_load_date
+		    marital_status, gender,valid_from,source_load_date
 		)
 		SELECT 
 		    stg.cst_id, stg.cst_key, stg.cst_firstname, stg.cst_lastname, 
-		    stg.cst_marital_status, stg.cst_gndr,stg._load_date
+		    stg.cst_marital_status, stg.cst_gndr,stg._load_date AS valid_from,stg._load_date AS source_load_date
 		FROM stg_customer stg
 		LEFT JOIN silver.customer t
 		  ON stg.cst_id = t.customer_id
