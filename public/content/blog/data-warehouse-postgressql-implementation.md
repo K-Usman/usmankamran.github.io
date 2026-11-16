@@ -169,11 +169,19 @@ BEGIN
 		)
 		SELECT 
 		    stg.cst_id, stg.cst_key, stg.cst_firstname, stg.cst_lastname, 
-		    stg.cst_marital_status, stg.cst_gndr,stg._load_date AS valid_from,stg._load_date AS source_load_date
+		    stg.cst_marital_status, stg.cst_gndr,
+			CASE WHEN existing_cust.customer_id IS NULL THEN '1990-01-01'::DATE  -- historical backfilling 
+			ELSE stg._load_date END AS valid_from,
+			stg._load_date AS source_load_date
 		FROM stg_customer stg
 		LEFT JOIN silver.customer t
 		  ON stg.cst_id = t.customer_id
-		 AND t.is_current = TRUE
+		  AND t.is_current = TRUE
+		LEFT JOIN (
+    		SELECT DISTINCT customer_id 
+    		FROM silver.customer
+		)existing_cust  
+			 ON stg.cst_id = existing_cust.customer_id
 		WHERE t.customer_id IS NULL;
 		RAISE NOTICE 'Inserted customer data into silver.customer';
 		RAISE NOTICE '========================================================';
